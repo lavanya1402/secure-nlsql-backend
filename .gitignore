@@ -16,3 +16,7 @@ Thumbs.db
 
 # IDE
 .vscode/
+.ruff_cache/
+.pytest_cache/
+.venv/
+!.env.example

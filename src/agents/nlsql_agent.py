@@ -1,6 +1,12 @@
 import re
 from typing import Dict, Any
 
+def _has_word(text: str, words: list) -> bool:
+    """True if any of the words appears in text as a whole word."""
+    pattern = r"\b(?:" + "|".join(re.escape(w) for w in words) + r")\b"
+    return re.search(pattern, text) is not None
+
+
 def nlsql_parse(text: str) -> Dict[str, Any]:
     t = (text or "").strip()
     low = t.lower()
@@ -13,12 +19,13 @@ def nlsql_parse(text: str) -> Dict[str, Any]:
         "raw_text": t,
     }
 
-    # Detect operation
-    if any(x in low for x in ["delete", "remove"]):
+    # Detect operation. Match whole words only, so that words such as
+    # "created", "dataset" or "address" do not trigger a write operation.
+    if _has_word(low, ["delete", "remove"]):
         out["operation"] = "DELETE"
-    elif any(x in low for x in ["update", "change", "set"]):
+    elif _has_word(low, ["update", "change", "set"]):
         out["operation"] = "UPDATE"
-    elif any(x in low for x in ["insert", "add", "create", "new customer"]):
+    elif _has_word(low, ["insert", "add", "create", "new customer"]):
         out["operation"] = "INSERT"
     else:
         out["operation"] = "SELECT"
